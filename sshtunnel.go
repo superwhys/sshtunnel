@@ -75,6 +75,15 @@ func NewTunnel(cfs ...*SshConfig) *SshTunnel {
 	return tunnel
 }
 
+func (st *SshTunnel) GetHost() string {
+	var resp string
+	for _, conf := range st.confs {
+		resp = conf.HostName
+	}
+
+	return resp
+}
+
 func (st *SshTunnel) Close() {
 	if st.sshClient != nil {
 		st.sshClient.Close()
