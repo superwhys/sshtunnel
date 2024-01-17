@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 	"github.com/superwhys/goutils/lg"
 	"golang.org/x/crypto/ssh"
 )
@@ -195,25 +196,28 @@ func (st *SshTunnel) Forward(ctx context.Context, localAddr, remoteAddr string) 
 				local = newLocal
 				continue
 			}
-			lg.Debugc(ctx, "local %s accept connection from %s", client.LocalAddr().String(), client.RemoteAddr().String())
+
+			uid := uuid.NewV4()
+			nCtx := lg.With(ctx, "[%v]", uid)
+			lg.Infoc(nCtx, "local %s accept connection from %s", client.LocalAddr().String(), client.RemoteAddr().String())
 
 			// dial remote addr and handle local client connections data to remote server
 			go func(client net.Conn) {
 				defer client.Close()
 				if st.sshClient == nil {
-					lg.Errorc(ctx, "lost ssh connection")
+					lg.Errorc(nCtx, "lost ssh connection")
 					return
 				}
 
 				remote, err := st.sshClient.Dial("tcp", remoteAddr)
 				if err != nil {
-					lg.Errorc(ctx, "dial remote addr %s error: %v", remoteAddr, err)
+					lg.Errorc(nCtx, "dial remote addr %s error: %v", remoteAddr, err)
 					return
 				}
 
-				lg.Debugc(ctx, "start handle local %s connection to remote %s", client.LocalAddr().String(), remoteAddr)
-				st.handleClient(ctx, client, remote)
-				lg.Debugc(ctx, "end handle local %s connection to remote %s", client.LocalAddr().String(), remoteAddr)
+				lg.Debugc(nCtx, "start handle local %s connection to remote %s", client.LocalAddr().String(), remoteAddr)
+				st.handleClient(nCtx, client, remote)
+				lg.Debugc(nCtx, "end handle local %s connection to remote %s", client.LocalAddr().String(), remoteAddr)
 			}(client)
 		}
 	}()
@@ -230,7 +234,7 @@ func (st *SshTunnel) handleClient(ctx context.Context, local, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(local, remote)
 		if err != nil {
-			lg.Errorc(ctx, "remote -> local error: %v", err)
+			lg.Warnc(ctx, "remote -> local error: %v", err)
 		}
 		cancel()
 	}()
@@ -239,7 +243,7 @@ func (st *SshTunnel) handleClient(ctx context.Context, local, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(remote, local)
 		if err != nil {
-			lg.Errorc(ctx, "local -> remote error: %v", err)
+			lg.Warnc(ctx, "local -> remote error: %v", err)
 		}
 		cancel()
 	}()
