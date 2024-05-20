@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
-	"github.com/superwhys/goutils/lg"
+	"github.com/superwhys/venkit/lg"
 	"golang.org/x/crypto/ssh"
 )
 
