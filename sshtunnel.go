@@ -121,6 +121,9 @@ func (st *SshTunnel) dial() (*ssh.Client, error) {
 			return nil, err
 		}
 		c, chans, reqs, err := ssh.NewClientConn(conn, st.confs[i].HostName, conf)
+		if err != nil {
+			return nil, err
+		}
 		client = ssh.NewClient(c, chans, reqs)
 	}
 	return client, nil
