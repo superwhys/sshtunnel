@@ -147,10 +147,10 @@ func (st *SshTunnel) keepAlive() {
 			st.sshClient = nil
 
 			for {
-				lg.Error("ssh connection lost, try to reconnect", err)
+				lg.Errorf("ssh connection lost, try to reconnect")
 				newClient, err := st.dial()
 				if err != nil {
-					lg.Error("dial ssh server", err)
+					lg.Errorf("dial ssh server error: %v", err)
 					time.Sleep(time.Second * 3)
 					continue
 				}
