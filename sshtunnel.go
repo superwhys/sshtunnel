@@ -201,7 +201,7 @@ func (st *SshTunnel) Forward(ctx context.Context, localAddr, remoteAddr string) 
 			}
 
 			uid := uuid.NewV4()
-			nCtx := lg.With(ctx, "[%v]", uid)
+			nCtx := lg.With(ctx, "uid", uid)
 			lg.Infoc(nCtx, "local %s accept connection from %s", client.LocalAddr().String(), client.RemoteAddr().String())
 
 			// dial remote addr and handle local client connections data to remote server
