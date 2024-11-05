@@ -3,7 +3,6 @@ package sshtunnel
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -11,9 +10,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
-	"github.com/superwhys/venkit/lg"
 	"golang.org/x/crypto/ssh"
+
+	lg "github.com/go-puzzles/puzzles/plog"
+	uuid "github.com/satori/go.uuid"
 )
 
 type SshConfig struct {
@@ -35,7 +35,7 @@ func (sc *SshConfig) SetDefaults() {
 }
 
 func getIdentifyKey(filePath string) (ssh.Signer, error) {
-	buff, _ := ioutil.ReadFile(filePath)
+	buff, _ := os.ReadFile(filePath)
 	return ssh.ParsePrivateKey(buff)
 }
 
