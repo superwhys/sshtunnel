@@ -2,6 +2,7 @@ package sshtunnel
 
 import (
 	"context"
+	"embed"
 	"io"
 	"net"
 	"os"
@@ -17,6 +18,7 @@ import (
 )
 
 type SshConfig struct {
+	fs           *embed.FS
 	HostName     string
 	User         string
 	IdentityFile string
@@ -34,8 +36,10 @@ func (sc *SshConfig) SetDefaults() {
 	}
 }
 
-func getIdentifyKey(filePath string) (ssh.Signer, error) {
-	buff, err := os.ReadFile(filePath)
+type readFunc func(string) ([]byte, error)
+
+func getIdentifyKey(read readFunc, filePath string) (ssh.Signer, error) {
+	buff, err := read(filePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read identity file")
 	}
@@ -43,7 +47,14 @@ func getIdentifyKey(filePath string) (ssh.Signer, error) {
 }
 
 func (sc *SshConfig) ParseClientConfig() (*ssh.ClientConfig, error) {
-	key, err := getIdentifyKey(sc.IdentityFile)
+	var rf readFunc
+	if sc.fs != nil {
+		rf = sc.fs.ReadFile
+	} else {
+		rf = os.ReadFile
+	}
+
+	key, err := getIdentifyKey(rf, sc.IdentityFile)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +72,23 @@ type SshTunnel struct {
 	confs     []*SshConfig
 	sshClient *ssh.Client
 	wg        sync.WaitGroup
+}
+
+func NewTUnnelWIthEmbed(fs *embed.FS, cfs ...*SshConfig) *SshTunnel {
+	for _, cf := range cfs {
+		cf.fs = fs
+		cf.SetDefaults()
+	}
+
+	tunnel := &SshTunnel{
+		confs: cfs,
+	}
+	client, err := tunnel.dial()
+	lg.PanicError(err)
+	tunnel.sshClient = client
+	go tunnel.keepAlive()
+
+	return tunnel
 }
 
 func NewTunnel(cfs ...*SshConfig) *SshTunnel {
