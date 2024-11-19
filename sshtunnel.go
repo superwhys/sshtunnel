@@ -161,6 +161,85 @@ func (st *SshTunnel) keepAlive() {
 	}
 }
 
+func (st *SshTunnel) Reverse(ctx context.Context, remoteAddr, localAddr string) error {
+	st.wg.Add(1)
+
+	ctx = lg.With(ctx, "[SSHReverse]")
+
+	if strings.HasPrefix(remoteAddr, ":") {
+		remoteAddr = "0.0.0.0" + remoteAddr
+	}
+
+	remoteLst, err := st.sshClient.Listen("tcp", remoteAddr)
+	if err != nil {
+		return errors.Wrapf(err, "listen on remote addr %s", remoteAddr)
+	}
+
+	lg.Infof("listen remote %v success", remoteAddr)
+
+	go func() {
+		defer func() {
+			lg.Infoc(ctx, "disconnected reversing %s to %s", remoteAddr, localAddr)
+		}()
+		defer st.wg.Done()
+		defer remoteLst.Close()
+
+		for {
+			if err := ctx.Err(); err != nil {
+				return
+			}
+
+			if remoteLst == nil {
+				if st.sshClient == nil {
+					lg.Warnc(ctx, "SSH connections lost")
+					continue
+				}
+
+				newLst, err := st.sshClient.Listen("tcp", remoteAddr)
+				if err != nil {
+					lg.Errorc(ctx, "SSH listen redial failed, err: %v", err)
+					continue
+				}
+				lg.Debugc(ctx, "SSH listen redial success -> %v", remoteAddr)
+				remoteLst = newLst
+			}
+
+			remote, err := remoteLst.Accept()
+			if err != nil {
+				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+					lg.Debugc(ctx, "remote timeout listening")
+					continue
+				}
+				lg.Warnc(ctx, "Remote listening accept error, Redial... : %v", err)
+				if remoteLst != nil {
+					remoteLst.Close()
+				}
+				remoteLst = nil
+				continue
+			}
+			if err := ctx.Err(); err != nil {
+				return
+			}
+			lg.Debugc(ctx, "remote %s accept connection from %s", remote.LocalAddr().String(), remote.RemoteAddr())
+
+			go func(remote net.Conn) {
+				local, err := net.Dial("tcp", localAddr)
+				if err != nil {
+					lg.Errorc(ctx, "dial local addr %s error: %v", localAddr, err)
+					return
+				}
+
+				lg.Debugc(ctx, "start handle remote %s via %s to local %s", remote.RemoteAddr(), remote.LocalAddr(), localAddr)
+				st.handleClient(ctx, remote, local)
+				lg.Debugc(ctx, "end handle remote %s via %v to local %s", remote.RemoteAddr(), remote.LocalAddr(), localAddr)
+			}(remote)
+		}
+	}()
+
+	return nil
+
+}
+
 func (st *SshTunnel) Forward(ctx context.Context, localAddr, remoteAddr string) error {
 	st.wg.Add(1)
 
