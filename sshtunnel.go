@@ -35,7 +35,10 @@ func (sc *SshConfig) SetDefaults() {
 }
 
 func getIdentifyKey(filePath string) (ssh.Signer, error) {
-	buff, _ := os.ReadFile(filePath)
+	buff, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read identity file")
+	}
 	return ssh.ParsePrivateKey(buff)
 }
 
@@ -87,7 +90,10 @@ func (st *SshTunnel) GetHost() string {
 
 func (st *SshTunnel) Close() {
 	if st.sshClient != nil {
-		st.sshClient.Close()
+		if err := st.sshClient.Close(); err != nil {
+			lg.Errorf("failed to close ssh client: %v", err)
+		}
+		st.sshClient = nil
 	}
 }
 
@@ -104,6 +110,8 @@ func (st *SshTunnel) dial() (*ssh.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	clientConf.Timeout = 30 * time.Second
 
 	client, err := ssh.Dial("tcp", st.confs[0].HostName, clientConf)
 	if err != nil {
@@ -134,9 +142,12 @@ func (st *SshTunnel) keepAlive() {
 	defer tick.Stop()
 
 	for range tick.C {
-		// send keep alive request
+		if st.sshClient == nil {
+			continue
+		}
 		_, _, err := st.sshClient.SendRequest("keepalive@golang.org", true, nil)
 		if err != nil {
+			lg.Errorf("keepalive failed: %v", err)
 			// if error in send request
 			// try to reconnect
 			if st.sshClient != nil {
