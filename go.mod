@@ -1,9 +1,9 @@
 module github.com/superwhys/sshtunnel
 
-go 1.23.2
+go 1.23.3
 
 require (
-	github.com/go-puzzles/puzzles v1.0.20
+	github.com/go-puzzles/puzzles v1.1.8
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
 	golang.org/x/crypto v0.25.0

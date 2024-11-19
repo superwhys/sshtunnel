@@ -2,8 +2,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-logfmt/logfmt v0.6.0 h1:wGYYu3uicYdqXVgoYbvnkrPVXkuLM1p1ifugDMEdRi4=
 github.com/go-logfmt/logfmt v0.6.0/go.mod h1:WYhtIu8zTZfxdn5+rREduYbwxfcBr/Vr6KEVveWlfTs=
-github.com/go-puzzles/puzzles v1.0.20 h1:ghzKG14BmHX3cxw2nOzSjgT6mMSQQy8dhD/Y0p1mCE4=
-github.com/go-puzzles/puzzles v1.0.20/go.mod h1:SgZRDA8js5FYvN9ByqhUacudF1suZmzU684eTTqci+w=
+github.com/go-puzzles/puzzles v1.1.8 h1:SKiyF9EjZw3ndpJOuV2uAtVF+RS9UZPB8qFf/4El6ak=
+github.com/go-puzzles/puzzles v1.1.8/go.mod h1:OQu2AViX0MJRlBCgHwW8q2obYje5tqECbHtRYMKaRaY=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
