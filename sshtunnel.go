@@ -74,7 +74,7 @@ type SshTunnel struct {
 	wg        sync.WaitGroup
 }
 
-func NewTUnnelWIthEmbed(fs *embed.FS, cfs ...*SshConfig) *SshTunnel {
+func NewTunnelWithEmbed(fs *embed.FS, cfs ...*SshConfig) *SshTunnel {
 	for _, cf := range cfs {
 		cf.fs = fs
 		cf.SetDefaults()
