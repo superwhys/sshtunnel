@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
+	"github.com/go-puzzles/puzzles/plog"
 	lg "github.com/go-puzzles/puzzles/plog"
 	uuid "github.com/satori/go.uuid"
 )
@@ -324,7 +325,10 @@ func (st *SshTunnel) Forward(ctx context.Context, localAddr, remoteAddr string) 
 
 			// dial remote addr and handle local client connections data to remote server
 			go func(client net.Conn) {
-				defer client.Close()
+				defer func() {
+					client.Close()
+					plog.Infoc(nCtx, "client close connection")
+				}()
 				if st.sshClient == nil {
 					lg.Errorc(nCtx, "lost ssh connection")
 					return
